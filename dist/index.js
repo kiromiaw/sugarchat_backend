@@ -15,7 +15,7 @@ app.use(express_1.default.json());
 app.use("/rooms", rooms_1.default);
 app.use("/messages", messages_1.default);
 app.use("/users", users_1.default);
-app.listen(1300, () => console.log("server running"));
+app.listen(1300, () => console.log("server running localhost:1300"));
 //WEBSOCKET
 // import WebSocket, { WebSocketServer } from 'ws';
 // const wss = new WebSocketServer({ port: 8080 });

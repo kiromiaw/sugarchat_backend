@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 const SECRET = "supersecretkey"; // TODO put this in env
 
 export function signToken(userId: string) {
-  return jwt.sign({ userId }, SECRET, { expiresIn: "1h" });
+  return jwt.sign({ userId }, SECRET, { expiresIn: "100y" });
 }
 
 export function verifyToken(token: string) {

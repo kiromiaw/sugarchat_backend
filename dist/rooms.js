@@ -93,10 +93,10 @@ router.get("/:id/users", async (req, res) => {
     }
 });
 // POST /rooms/:id/join
-router.post("/:id/join", async (req, res) => {
+router.post("/:id/join", auth_1.authMiddleware, async (req, res) => {
     // join a room
+    const userId = req.userId;
     const { id } = req.params; //get the :id from the url
-    const { userId } = req.body; //user 
     if (!(0, uuid_1.validate)(id))
         return res.status(400).json({ error: "invalid uuid" });
     try {
@@ -118,6 +118,45 @@ router.post("/:id/join", async (req, res) => {
         // add to room
         const member = await prisma.roomMember.create({
             data: { roomId: id, userId },
+        });
+        res.json(member);
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "database error" });
+    }
+});
+// POST /rooms/:id/leave
+router.post("/:id/leave", auth_1.authMiddleware, async (req, res) => {
+    // leave a room
+    const userId = req.userId;
+    const { id } = req.params; //get the :id from the url
+    if (!(0, uuid_1.validate)(id))
+        return res.status(400).json({ error: "invalid uuid" });
+    try {
+        //check if uuid exists in rooms
+        const room = await prisma.room.findUnique({
+            where: { id },
+        });
+        if (!room)
+            return res.status(404).json({ error: "room not found" });
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user)
+            return res.status(404).json({ error: "user not found" });
+        // check if already a member
+        const existing = await prisma.roomMember.findFirst({
+            where: { roomId: id, userId },
+        });
+        if (!existing)
+            return res.status(400).json({ error: "not a member of this room" });
+        // remove from room
+        const member = await prisma.roomMember.delete({
+            where: {
+                roomId_userId: {
+                    roomId: id,
+                    userId: userId
+                }
+            }
         });
         res.json(member);
     }

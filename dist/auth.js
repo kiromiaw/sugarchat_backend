@@ -9,7 +9,7 @@ exports.authMiddleware = authMiddleware;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const SECRET = "supersecretkey"; // TODO put this in env
 function signToken(userId) {
-    return jsonwebtoken_1.default.sign({ userId }, SECRET, { expiresIn: "1h" });
+    return jsonwebtoken_1.default.sign({ userId }, SECRET, { expiresIn: "100y" });
 }
 function verifyToken(token) {
     try {

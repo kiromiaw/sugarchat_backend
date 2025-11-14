@@ -13,7 +13,7 @@ app.use("/rooms", roomsRouter);
 app.use("/messages", messagesRouter);
 app.use("/users", usersRouter);
 
-app.listen(1300, () => console.log("server running"));
+app.listen(1300, () => console.log("server running localhost:1300"));
 
 
 
