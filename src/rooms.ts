@@ -3,6 +3,8 @@ import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4, validate as isUuid } from "uuid";
 import { authMiddleware } from "./auth";
 
+import { wss } from './websocket'; //websocket
+
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -184,8 +186,9 @@ router.post("/:id/leave", authMiddleware, async (req, res) => {
 });
 
 // GET /rooms/:id/messages
-router.get("/:id/messages", async (req, res) => {
+router.get("/:id/messages",authMiddleware, async (req, res) => {
   // get messages from a room
+  const userId = (req as any).userId; //user
   const { id } = req.params; //get the :id from the url
   if (!isUuid(id)) return res.status(400).json({ error: "invalid uuid" });
   try {
@@ -195,6 +198,16 @@ router.get("/:id/messages", async (req, res) => {
     });
 
     if (!room) return res.status(404).json({ error: "room not found" });
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return res.status(404).json({ error: "user not found" });
+
+    // check if already a member
+    const existing = await prisma.roomMember.findFirst({
+      where: { roomId: id, userId },
+    });
+    if (!existing) return res.status(400).json({ error: "not a member of this room" });
+
 
     const messages = await prisma.message.findMany({ where: { roomId : id },include: { owner: true }});
     res.json(messages);
@@ -210,20 +223,69 @@ router.get("/:id/messages", async (req, res) => {
 //   console.log("valid integer id");
 // }
 
+// ! websocketless
+// below sends messages
 // POST /rooms/:id/messages  (expects { text })
-router.post("/:id/messages", async (req, res) => {
-  // post a message
-  const { id } = req.params; //get the :id from the url
+// router.post("/:id/messages", authMiddleware, async (req, res) => {
+//   // post a message
+//   const user = (req as any).userId; //user
+//   const { id } = req.params; //get the :id from the url
+//   if (!isUuid(id)) return res.status(400).json({ error: "invalid uuid" });
+//   const { text, room } = req.body;
+//   if (!text) return res.status(400).json({ error: "text is required" });
+//   if (!user) return res.status(404).json({ error: "user not found" });
+
+//     // check if already a member
+//     const existing = await prisma.roomMember.findFirst({
+//       where: { roomId: id, userId: user },
+//     });
+//     if (!existing) return res.status(400).json({ error: "not a member of this room" });
+//   try {
+//     const message = await prisma.message.create({
+//       data: {
+//         text: text,
+//         ownerId: user,
+//         roomId: room,
+//       },
+//     });
+
+//     res.json(message);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "failed to create message" });
+//   }
+// });
+
+router.post("/:id/messages", authMiddleware, async (req, res) => {
+  const user = (req as any).userId;
+  const { id } = req.params;
+  const { text, room } = req.body;
+
   if (!isUuid(id)) return res.status(400).json({ error: "invalid uuid" });
-  const { text, owner, room } = req.body;
-  if (!text || !owner) return res.status(400).json({ error: "text or owner is required" });
+  if (!text) return res.status(400).json({ error: "text is required" });
+  if (!user) return res.status(404).json({ error: "user not found" });
+
+  const existing = await prisma.roomMember.findFirst({
+    where: { roomId: id, userId: user },
+  });
+  if (!existing) return res.status(400).json({ error: "not a member of this room" });
+
   try {
     const message = await prisma.message.create({
       data: {
         text: text,
-        ownerId: owner,
+        ownerId: user,
         roomId: room,
       },
+      include: { owner: true }
+    });
+
+    // broadcast to all websocket clients in the same room
+    const payload = JSON.stringify({ type: 'message', roomId: room, message });
+    wss.clients.forEach(client => {
+      if ((client as any).readyState === 1) {
+        client.send(payload);
+      }
     });
 
     res.json(message);
@@ -232,6 +294,7 @@ router.post("/:id/messages", async (req, res) => {
     res.status(500).json({ error: "failed to create message" });
   }
 });
+
 
 router.post("/join/:roomId", authMiddleware, async (req: Request, res: Response) => {
   const userId = (req as any).userId;

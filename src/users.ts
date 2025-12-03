@@ -126,4 +126,34 @@ router.get("/:id/name", async (req, res) => {
   }
 });
 
+// PATCH /users/:id to change things
+router.patch("/:id", async (req, res) => {
+  const { id } = req.params;
+  const { displayName, bio, profilePicture } = req.body;
+
+  if (!id) return res.status(400).json({ error: "user id is required" });
+
+  try {
+    // only include fields that are defined in the update
+    const data: any = {};
+    if (displayName !== undefined) data.displayName = displayName;
+    if (bio !== undefined) data.bio = bio;
+    if (profilePicture !== undefined) data.profilePicture = profilePicture;
+
+    if (Object.keys(data).length === 0)
+      return res.status(400).json({ error: "no fields to update" });
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data,
+    });
+
+    res.json(updatedUser);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "failed to update user" });
+  }
+});
+
+
 export default router

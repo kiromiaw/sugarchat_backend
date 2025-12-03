@@ -16,16 +16,16 @@ app.use("/rooms", rooms_1.default);
 app.use("/messages", messages_1.default);
 app.use("/users", users_1.default);
 app.listen(1300, () => console.log("server running localhost:1300"));
-//WEBSOCKET
-// import WebSocket, { WebSocketServer } from 'ws';
-// const wss = new WebSocketServer({ port: 8080 });
-// wss.on('connection', ws => {
-//   ws.on('message', message => {
-//     // save message to DB here
-//     // then broadcast
-//     wss.clients.forEach(client => {
-//       if (client.readyState === WebSocket.OPEN) client.send(message);
-//     });
-//   });
-// });
-// app.listen(1300, () => console.log("server running"));
+const ws_1 = require("ws");
+const wss = new ws_1.WebSocketServer({ port: 5000 });
+wss.on("connection", (socket) => {
+    console.log("client connected");
+    socket.on("message", (msg) => {
+        // broadcast to everyone
+        for (const client of wss.clients) {
+            if (client.readyState === 1) {
+                client.send(msg.toString());
+            }
+        }
+    });
+});
