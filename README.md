@@ -4,11 +4,15 @@ creating rooms, users, and messages all require a curl request. unfortunately, i
 messages contain a webkit functionality.
 
 # usage
-you'll need a [postgresql](https://www.postgresql.org/) server and you'll have to add it in your .env file `DATABASE_URL="postgresql://username:passsword@X.X.X.X:XXXX/sugarchatdb"`
-then you can run the server using `npm run dev`
+you'll need a [postgresql](https://www.postgresql.org/) server and you'll have to add it in your .env file
+```DATABASE_URL="postgresql://username:passsword@X.X.X.X:XXXX/sugarchatdb"```
+then you can run the server using 
+```npm run dev```
 
 it's missing a few things like read ticks, sending attachments, and most importantly an interface to use it all.
-all of the requests should be done in the terminal, like this : `curl -X PUT http://[SUGARCHAT BACKEND]:1300/users/ -H "Content-Type: application/json" -d '{"username":"[USERNAME]","password":"[PASSWORD]","displayName":"[DISPLAYNAME]"}'` to create an user
+all of the requests should be done in the terminal, like this
+```curl -X PUT http://[SUGARCHAT BACKEND]:1300/users/ -H "Content-Type: application/json" -d '{"username":"[USERNAME]","password":"[PASSWORD]","displayName":"[DISPLAYNAME]"}'```
+to create an user
 
 # features
 - websocket
