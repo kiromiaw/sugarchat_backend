@@ -1,5 +1,5 @@
 # sugarchat backend
-creating rooms, users, and messages all require a curl request. unfortunately, i forgot what i wrote in this codebase but everything should be well structured, and comments are there for more complex requests.
+creating rooms, users, and messages all require a curl request.
 
 messages contain a webkit functionality.
 
@@ -13,7 +13,7 @@ then you can run the server using
 npm run dev
 ```
 
-it's missing a few things like read ticks, sending attachments, and most importantly an interface to use it all.
+it's missing a few things like read ticks, sending attachments.
 all of the requests should be done in the terminal, like this
 ```bash
 curl -X PUT http://[SUGARCHAT BACKEND]:1300/users/ -H "Content-Type: application/json" -d '{"username":"[USERNAME]","password":"[PASSWORD]","displayName":"[DISPLAYNAME]"}'
